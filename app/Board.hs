@@ -73,3 +73,46 @@ countAdjacentMines board pos =
     in
         mineCount
 
+-- | Reveals one step of the expansion (NO recursion here).
+revealOnePosition :: Position -> Board -> (Board, [Position])
+revealOnePosition pos board =
+    let 
+        cell = (getCell board pos)
+    in     
+        case cell of
+            (Revealed, _) -> (board, [])
+            (Flagged, _)  -> (board, [])
+            (Hidden, Mine) -> (updateCell board pos (revealCell cell), [])
+            (Hidden, Safe n) ->
+                let
+                    board1 = updateCell board pos (revealCell cell)
+                in
+                    case n of
+                        0 -> (board1, getNeighbours board1 pos)  
+                        _ -> (board1, [])
+
+-- | Reveals a whole list of positions (one pass) and return next pending positions
+revealBatchPositions :: Board -> [Position] -> (Board, [Position])
+revealBatchPositions board pending = foldr
+    (\p (bAcc, pendAcc) ->
+        let
+          (bAcc1, newPs) = revealOnePosition p bAcc
+        in
+          (bAcc1, newPs ++ pendAcc)
+    )
+    (board, [])
+    pending
+
+-- | Flood fill using pure recursion (pattern matching)
+revealConnectedZeros :: Board -> [Position] -> Board
+revealConnectedZeros board [] = board
+revealConnectedZeros board pending = 
+      let
+        (board1, newPending) = revealBatchPositions board pending
+      in
+        revealConnectedZeros board1 newPending
+
+-- | Public entry point: reveal/expand starting from one position.
+revealCellAt :: Board -> Position -> Board
+revealCellAt board pos = revealConnectedZeros board [pos]
+
