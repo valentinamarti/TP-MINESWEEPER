@@ -116,3 +116,49 @@ revealConnectedZeros board pending =
 revealCellAt :: Board -> Position -> Board
 revealCellAt board pos = revealConnectedZeros board [pos]
 
+-- | Board bounds for a rectangular board.
+createBoardBounds :: Int -> Int -> (Position, Position)
+createBoardBounds maxRow maxCol = ((0, 0), (maxRow, maxCol))
+
+-- | All positions in a rectangular board.
+generateAllBoardPositions :: Int -> Int -> [Position]
+generateAllBoardPositions maxRow maxCol = [(r, c) | r <- [0..maxRow], c <- [0..maxCol]]
+
+-- | Base cell: mines are Mine, non-mines start as Safe 0.
+createBaseCell :: [Position] -> Position -> Cell
+createBaseCell minePositions pos =
+  if pos `elem` minePositions
+    then (Hidden, Mine)
+    else (Hidden, Safe 0)
+
+-- | Build a board from a "position -> cell" function.
+buildBoardFromCellFn :: Int -> Int -> (Position -> Cell) -> Board
+buildBoardFromCellFn maxRow maxCol cellFn =
+  let
+    boardBounds = createBoardBounds maxRow maxCol
+    allPositions = generateAllBoardPositions maxRow maxCol
+    associations = map (\pos -> (pos, cellFn pos)) allPositions
+  in
+    array boardBounds associations
+
+-- | Base board: mines placed, non-mines are Safe 0
+createBaseBoard :: Int -> Int -> [Position] -> Board
+createBaseBoard maxRow maxCol minePositions = buildBoardFromCellFn maxRow maxCol (createBaseCell minePositions)
+
+-- | Final cell: mines are Mine, non-mines are Safe (countAdjacentMines baseBoard pos).
+createFinalCell :: Board -> [Position] -> Position -> Cell
+createFinalCell baseBoard minePositions pos =
+  if pos `elem` minePositions
+    then (Hidden, Mine)
+    else
+      let mineCount = countAdjacentMines baseBoard pos
+      in (Hidden, Safe mineCount)
+
+-- | Create initial board from mine positions.
+createInitialBoard :: Int -> Int -> [Position] -> Board
+createInitialBoard maxRow maxCol minePositions =
+  let
+    baseBoard = createBaseBoard maxRow maxCol minePositions
+  in
+    buildBoardFromCellFn maxRow maxCol (createFinalCell baseBoard minePositions)
+
