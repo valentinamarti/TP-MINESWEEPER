@@ -65,7 +65,20 @@ executable TP-BUSCAMINAS
     other-modules:       Types,
                         CellFunctions,
                         Board,
-                        RandomUtils
+                        RandomUtils,
+                        Config,
+                        GameInit,
+                        View,
+                        View.Colors,
+                        View.Constants,
+                        View.Geometry,
+                        View.Text,
+                        View.Buttons,
+                        View.Overlay,
+                        View.Menu,
+                        View.BoardView,
+                        GameLogic,
+                        App
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
