@@ -30,3 +30,29 @@ data Game = Game
     , minesRemaining :: Int
     , gameState :: GameState
     }  deriving (Eq, Show)
+
+-- | Difficulty level (percentage of cells that are mines, approx.)
+data Level = Easy | Medium | Hard
+    deriving (Eq, Show, Bounded, Enum)
+
+-- | Board size preset: (maxRow, maxCol)
+data BoardSize = Small | Med | Large
+    deriving (Eq, Show, Bounded, Enum)
+
+-- | State of the start menu (level and size selection).
+data MenuState = MenuState
+    { menuLevel :: Level
+    , menuSize  :: BoardSize
+    } deriving (Eq, Show)
+
+-- | Action triggered by a click on the menu.
+data MenuAction = StartGame | SelectLevel Level | SelectSize BoardSize
+    deriving (Eq, Show)
+
+-- | Action triggered by a click on the "You Lost" overlay.
+data LostAction = BackToMenu | QuitGame
+    deriving (Eq, Show)
+
+-- | Full app state: either at menu or in a game.
+data AppState = Menu MenuState | InGame Game
+    deriving (Eq, Show)

@@ -1,8 +1,12 @@
 module Board where
 
-import Data.Array
+import Data.Array (Array, array, assocs, bounds, inRange, (!), (//))
 import Types
 import CellFunctions
+
+-- | True if every cell is either revealed or a mine (victory condition).
+allNonMinesRevealed :: Board -> Bool
+allNonMinesRevealed board = all (\c -> isRevealed c || isMine c) (snd <$> assocs board)
 
 -- | Get a cell at a specific position
 -- | (!) :: Ix i => Array i e -> i -> e (from Data.Array)
@@ -115,6 +119,15 @@ revealConnectedZeros board pending =
 -- | Public entry point: reveal/expand starting from one position.
 revealCellAt :: Board -> Position -> Board
 revealCellAt board pos = revealConnectedZeros board [pos]
+
+-- | Toggle flag at position: Hidden -> Flagged, Flagged -> Hidden
+toggleFlagAt :: Board -> Position -> Board
+toggleFlagAt board pos =
+  let cell = getCell board pos
+  in case cell of
+       (Hidden, content)  -> updateCell board pos (flagCell cell)
+       (Flagged, content) -> updateCell board pos (unflagCell cell)
+       _                  -> board
 
 -- | Board bounds for a rectangular board.
 createBoardBounds :: Int -> Int -> (Position, Position)
