@@ -19,7 +19,7 @@ Classic Minesweeper implemented in **Haskell** with 2D graphics using the **Glos
 cabal build
 
 # Run the game
-cabal run TP-BUSCAMINAS
+cabal run
 ```
 
 The window opens at 800×800 pixels (title: *Haskell Minesweeper*). An **Exit** button is always visible to close the game.
