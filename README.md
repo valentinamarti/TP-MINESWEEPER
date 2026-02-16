@@ -86,9 +86,3 @@ The number of mines is computed from level and size (percentage of total cells),
 | **Hard**   | 24          | 36             | 50          |
 
 *(Approximate values; the game uses the configured percentage with a minimum of 10.)*
-
----
-
-## License
-
-BSD-3-Clause. See `LICENSE`.
