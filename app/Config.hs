@@ -18,7 +18,7 @@ levelToDensity Hard   = 0.3
 minMines :: Int
 minMines = 10
 
--- | Number of mines from level and board size (at least minMines).
+-- | Number of mines from level and board size (at least minMines)
 numMinesForLevelAndSize :: Level -> BoardSize -> Int
 numMinesForLevelAndSize level sz =
   let (maxR, maxC) = boardSizeToDims sz
