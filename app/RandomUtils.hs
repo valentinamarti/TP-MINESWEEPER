@@ -1,14 +1,15 @@
 module RandomUtils where
 
 import Data.List
-import System.Random
+import System.Random.Stateful (uniformRM, globalStdGen)
 import Types
 
--- | Generate a random coordinate within the range [0..maxRow] x [0..maxCol]
+-- | Generate a random coordinate within the range [0..maxRow] x [0..maxCol].
+--   Uses uniformRM with globalStdGen (recommended over randomRIO).
 randomPosition :: Int -> Int -> IO Position
 randomPosition maxRow maxCol = do
-  row <- randomRIO (0, maxRow)
-  col <- randomRIO (0, maxCol)
+  row <- uniformRM (0, maxRow) globalStdGen
+  col <- uniformRM (0, maxCol) globalStdGen
   return (row, col)
 
 -- | Generate a list of n random coordinates (may contain duplicates).
@@ -22,4 +23,6 @@ randomPositions maxRow maxCol n = do
 -- | Given a list of positions (possibly with duplicates), returns the list without duplicates and its length
 --   nub :: Eq a => [a] -> [a] removes duplicate elements, keeping first occurrence.
 uniquePositionsAndCount :: [Position] -> ([Position], Int)
-uniquePositionsAndCount positions = (nub positions, length (nub positions))
+uniquePositionsAndCount positions =
+  let uniquePos = nub positions
+  in (uniquePos, length uniquePos)

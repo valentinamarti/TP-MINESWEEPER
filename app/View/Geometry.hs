@@ -1,7 +1,7 @@
 module View.Geometry where
 
 import Data.Array (inRange)
-import Graphics.Gloss
+import Graphics.Gloss ()
 import View.Constants (cellSize)
 import Types (Position)
 

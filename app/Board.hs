@@ -1,22 +1,22 @@
 module Board where
 
-import Data.Array (Array, array, assocs, bounds, inRange, (!), (//))
+import Data.Array (array, assocs, bounds, inRange, (!), (//))
 import Types
 import CellFunctions
 
 -- | True if every cell is either revealed or a mine (victory condition).
 allNonMinesRevealed :: Board -> Bool
-allNonMinesRevealed board = all (\c -> isRevealed c || isMine c) (snd <$> assocs board)
+allNonMinesRevealed b = all (\c -> isRevealed c || isMine c) (snd <$> assocs b)
 
 -- | Get a cell at a specific position
 -- | (!) :: Ix i => Array i e -> i -> e (from Data.Array)
 getCell :: Board -> Position -> Cell
-getCell board pos = board ! pos
+getCell b pos = b ! pos
 
 -- | Update a cell at a specific position
 -- | (//) :: Ix i => Array i e -> [(i, e)] -> Array i e (from Data.Array)
 updateCell :: Board -> Position -> Cell -> Board
-updateCell board pos cell = board // [(pos, cell)]
+updateCell b pos cell = b // [(pos, cell)]
 
 -- | Generate all 8 possible adjacent positions to a given position
 generateAllAdjacentPositions :: Position -> [Position]
@@ -37,15 +37,12 @@ generateAllAdjacentPositions (row, col) =
 
 -- | Get the 8 neighbours positions to a given position (handling board boundaries)
 getNeighbours :: Board -> Position -> [Position]
-getNeighbours board pos = 
+getNeighbours b pos =
     let
-        -- bounds :: Array i e -> (i, i) (from from Data.Array)
-        boardBounds = bounds board
-        
-        -- inRange :: (i, i) -> i -> Bool (from from Data.Array)
+        -- bounds :: Array i e -> (i, i) (from Data.Array)
+        boardBounds = bounds b
+        -- inRange :: (i, i) -> i -> Bool (from Data.Array)
         isValidPosition = inRange boardBounds
-        
-        -- filter :: (a -> Bool) -> [a] -> [a] (the og function)
         validNeighbours = filter isValidPosition (generateAllAdjacentPositions pos)
     in
         validNeighbours
@@ -53,7 +50,7 @@ getNeighbours board pos =
 -- | Get cells at multiple positions
 -- map :: (a -> b) -> [a] -> [b]
 getCellsAtPositions :: Board -> [Position] -> [Cell]
-getCellsAtPositions board positions = map (getCell board) positions
+getCellsAtPositions b positions = map (getCell b) positions
 
 -- | Count the number of mines in a list of cells
 -- isMine :: Cell -> Bool (from CellFunctions)
@@ -64,70 +61,65 @@ countMines cells = length (filter isMine cells)
 
 -- | Count the number of mines adjacent to a given position
 countAdjacentMines :: Board -> Position -> Int
-countAdjacentMines board pos =
+countAdjacentMines b pos =
     let
-        -- getNeighbours :: Board -> Position -> [Position]
-        neighbourPositions = getNeighbours board pos
-        
-        -- getCellsAtPositions :: Board -> [Position] -> [Cell]
-        neighbourCells = getCellsAtPositions board neighbourPositions
-        
-        -- countMines :: [Cell] -> Int
+        neighbourPositions = getNeighbours b pos
+        neighbourCells = getCellsAtPositions b neighbourPositions
         mineCount = countMines neighbourCells
     in
         mineCount
 
 -- | Reveals one step of the expansion (NO recursion here).
 revealOnePosition :: Position -> Board -> (Board, [Position])
-revealOnePosition pos board =
-    let 
-        cell = (getCell board pos)
-    in     
+revealOnePosition pos b =
+    let
+        cell = getCell b pos
+    in
         case cell of
-            (Revealed, _) -> (board, [])
-            (Flagged, _)  -> (board, [])
-            (Hidden, Mine) -> (updateCell board pos (revealCell cell), [])
+            (Revealed, _) -> (b, [])
+            (Flagged, _)  -> (b, [])
+            (Hidden, Mine) -> (updateCell b pos (revealCell cell), [])
             (Hidden, Safe n) ->
                 let
-                    board1 = updateCell board pos (revealCell cell)
+                    b1 = updateCell b pos (revealCell cell)
                 in
                     case n of
-                        0 -> (board1, getNeighbours board1 pos)  
-                        _ -> (board1, [])
+                        0 -> (b1, getNeighbours b1 pos)
+                        _ -> (b1, [])
 
 -- | Reveals a whole list of positions (one pass) and return next pending positions
 revealBatchPositions :: Board -> [Position] -> (Board, [Position])
-revealBatchPositions board pending = foldr
+revealBatchPositions b pending = foldr
     (\p (bAcc, pendAcc) ->
         let
           (bAcc1, newPs) = revealOnePosition p bAcc
         in
           (bAcc1, newPs ++ pendAcc)
     )
-    (board, [])
+    (b, [])
     pending
 
 -- | Flood fill using pure recursion (pattern matching)
 revealConnectedZeros :: Board -> [Position] -> Board
-revealConnectedZeros board [] = board
-revealConnectedZeros board pending = 
+revealConnectedZeros b [] = b
+revealConnectedZeros b pending =
       let
-        (board1, newPending) = revealBatchPositions board pending
+        (b1, newPending) = revealBatchPositions b pending
       in
-        revealConnectedZeros board1 newPending
+        revealConnectedZeros b1 newPending
 
 -- | Public entry point: reveal/expand starting from one position.
 revealCellAt :: Board -> Position -> Board
-revealCellAt board pos = revealConnectedZeros board [pos]
+revealCellAt b pos = revealConnectedZeros b [pos]
 
 -- | Toggle flag at position: Hidden -> Flagged, Flagged -> Hidden
 toggleFlagAt :: Board -> Position -> Board
-toggleFlagAt board pos =
-  let cell = getCell board pos
+toggleFlagAt b pos =
+  let cell = getCell b pos
   in case cell of
-       (Hidden, content)  -> updateCell board pos (flagCell cell)
-       (Flagged, content) -> updateCell board pos (unflagCell cell)
-       _                  -> board
+       (Hidden, _)  -> updateCell b pos (flagCell cell)
+       (Flagged, _) -> updateCell b pos (unflagCell cell)
+       _            -> b
 
 -- | Board bounds for a rectangular board.
 createBoardBounds :: Int -> Int -> (Position, Position)
